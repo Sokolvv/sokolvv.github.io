@@ -251,7 +251,7 @@
   }
 
   window.onload=function (){
-    $('[lang="ua"]').hide();
+    $('[lang="en"]').hide();
     const button = document.getElementById("languagebutton")
     button.addEventListener("click", switchLang)
   }
