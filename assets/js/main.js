@@ -246,12 +246,12 @@
   });
 
   function switchLang(){
-    $('[lang="nl"]').toggle();
     $('[lang="en"]').toggle();
+    $('[lang="ua"]').toggle();
   }
 
   window.onload=function (){
-    $('[lang="nl"]').hide();
+    $('[lang="ua"]').hide();
     const button = document.getElementById("languagebutton")
     button.addEventListener("click", switchLang)
   }
