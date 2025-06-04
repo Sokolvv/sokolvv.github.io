@@ -246,8 +246,8 @@
   });
 
   function switchLang(){
-    $('[lang="en"]').toggle();
     $('[lang="ua"]').toggle();
+    $('[lang="en"]').toggle();
   }
 
   window.onload=function (){
