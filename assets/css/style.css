@@ -292,12 +292,12 @@ h6 {
 
 .scroll_down a {
   position: absolute;
-  bottom: 20px;
+  bottom: 30px; /* Changed from 10px to give more space from bottom */
   left: 50%;
   z-index: 2;
   display: inline-block;
-  -webkit-transform: translate(0, -50%);
-  transform: translate(0, -50%);
+  -webkit-transform: translate(-50%, 0); /* Changed to center horizontally and align to bottom */
+  transform: translate(-50%, 0); /* Changed to center horizontally and align to bottom */
   color: #45505b;
   font: normal 400 20px / 1 "Josefin Sans", sans-serif;
   letter-spacing: .1em;

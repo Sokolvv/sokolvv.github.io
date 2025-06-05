@@ -1,5 +1,8 @@
 /**
- * Template Main JS File
+ * Template Name: MyResume - v4.7.0
+ * Template URL: https://bootstrapmade.com/free-html-bootstrap-template-my-resume/
+ * Author: BootstrapMade.com
+ * License: https://bootstrapmade.com/license/
  */
 ;(() => {
   /**
@@ -67,22 +70,6 @@
   }
 
   /**
-   * Back to top button
-   */
-  const backtotop = select(".back-to-top")
-  if (backtotop) {
-    const toggleBacktotop = () => {
-      if (window.scrollY > 100) {
-        backtotop.classList.add("active")
-      } else {
-        backtotop.classList.remove("active")
-      }
-    }
-    window.addEventListener("load", toggleBacktotop)
-    onscroll(document, toggleBacktotop)
-  }
-
-  /**
    * Mobile nav toggle
    */
   on("click", ".mobile-nav-toggle", function (e) {
@@ -92,7 +79,7 @@
   })
 
   /**
-   * Scrool with ofset on links with a class name .scrollto
+   * Scroll with offset on links with a class name .scrollto
    */
   on(
     "click",
@@ -115,7 +102,7 @@
   )
 
   /**
-   * Scroll with ofset on page load with hash links in the url
+   * Scroll with offset on page load with hash links in the url
    */
   window.addEventListener("load", () => {
     if (window.location.hash) {
@@ -138,11 +125,11 @@
   /**
    * Hero type effect
    */
+  const Typed = window.Typed
   const typed = select(".typed")
   if (typed) {
     let typed_strings = typed.getAttribute("data-typed-items")
     typed_strings = typed_strings.split(",")
-    const Typed = window.Typed // Declare Typed variable
     new Typed(".typed", {
       strings: typed_strings,
       loop: true,
@@ -153,11 +140,99 @@
   }
 
   /**
+   * Skills animation
+   */
+  const Waypoint = window.Waypoint
+  const skilsContent = select(".skills-content")
+  if (skilsContent) {
+    new Waypoint({
+      element: skilsContent,
+      offset: "80%",
+      handler: (direction) => {
+        const progress = select(".progress .progress-bar", true)
+        progress.forEach((el) => {
+          el.style.width = el.getAttribute("aria-valuenow") + "%"
+        })
+      },
+    })
+  }
+
+  /**
+   * Porfolio isotope and filter
+   */
+  const Isotope = window.Isotope
+  window.addEventListener("load", () => {
+    const portfolioContainer = select(".portfolio-container")
+    if (portfolioContainer) {
+      const portfolioIsotope = new Isotope(portfolioContainer, {
+        itemSelector: ".portfolio-item",
+      })
+
+      const portfolioFilters = select("#portfolio-flters li", true)
+
+      on(
+        "click",
+        "#portfolio-flters li",
+        function (e) {
+          e.preventDefault()
+          portfolioFilters.forEach((el) => {
+            el.classList.remove("filter-active")
+          })
+          this.classList.add("filter-active")
+
+          portfolioIsotope.arrange({
+            filter: this.getAttribute("data-filter"),
+          })
+          portfolioIsotope.on("arrangeComplete", () => {
+            window.AOS.refresh()
+          })
+        },
+        true,
+      )
+    }
+  })
+
+  /**
+   * Portfolio details slider
+   */
+  const Swiper = window.Swiper
+  new Swiper(".portfolio-details-slider", {
+    speed: 400,
+    loop: true,
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
+    },
+    pagination: {
+      el: ".swiper-pagination",
+      type: "bullets",
+      clickable: true,
+    },
+  })
+
+  /**
+   * Testimonials slider
+   */
+  new Swiper(".testimonials-slider", {
+    speed: 600,
+    loop: true,
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
+    },
+    slidesPerView: "auto",
+    pagination: {
+      el: ".swiper-pagination",
+      type: "bullets",
+      clickable: true,
+    },
+  })
+
+  /**
    * Animation on scroll
    */
   window.addEventListener("load", () => {
-    const AOS = window.AOS // Declare AOS variable
-    AOS.init({
+    window.AOS.init({
       duration: 1000,
       easing: "ease-in-out",
       once: true,
@@ -166,53 +241,45 @@
   })
 
   /**
-   * Language switcher
+   * Language Switching
    */
-  // Set English as the default language on page load
+  function switchLang() {
+    try {
+      const enElements = document.querySelectorAll('[lang="en"]')
+      const uaElements = document.querySelectorAll('[lang="ua"]')
+
+      const isEnglishVisible = enElements.length > 0 && window.getComputedStyle(enElements[0]).display !== "none"
+
+      if (isEnglishVisible) {
+        enElements.forEach((el) => (el.style.display = "none"))
+        uaElements.forEach((el) => (el.style.display = "block"))
+      } else {
+        uaElements.forEach((el) => (el.style.display = "none"))
+        enElements.forEach((el) => (el.style.display = "block"))
+      }
+    } catch (error) {
+      console.error("Language switch error:", error)
+    }
+  }
+
+  // Initialize language on page load
   window.addEventListener("load", () => {
-    // Hide Ukrainian content, show English content
-    document.querySelectorAll('[lang="ua"]').forEach((el) => {
-      el.style.display = "none"
-    })
-    document.querySelectorAll('[lang="en"]').forEach((el) => {
-      el.style.display = "block"
-    })
+    try {
+      const uaElements = document.querySelectorAll('[lang="ua"]')
+      const enElements = document.querySelectorAll('[lang="en"]')
 
-    // Update any language-specific classes or states if needed
-    document.documentElement.setAttribute("lang", "en")
-  })
+      uaElements.forEach((el) => (el.style.display = "none"))
+      enElements.forEach((el) => (el.style.display = "block"))
 
-  // Handle language toggle button click
-  on("click", "#languagebutton", (e) => {
-    e.preventDefault()
-
-    const currentLang = document.documentElement.getAttribute("lang") || "en"
-    const newLang = currentLang === "en" ? "ua" : "en"
-
-    // Toggle visibility based on language attribute
-    document.querySelectorAll('[lang="ua"]').forEach((el) => {
-      el.style.display = newLang === "ua" ? "block" : "none"
-    })
-    document.querySelectorAll('[lang="en"]').forEach((el) => {
-      el.style.display = newLang === "en" ? "block" : "none"
-    })
-
-    // Update the document language
-    document.documentElement.setAttribute("lang", newLang)
+      const button = document.getElementById("languagebutton")
+      if (button) {
+        button.addEventListener("click", (e) => {
+          e.preventDefault()
+          switchLang()
+        })
+      }
+    } catch (error) {
+      console.error("Language initialization error:", error)
+    }
   })
 })()
-
-//This function was missing
-const switchLang = () => {
-  const currentLang = document.documentElement.getAttribute("lang") || "en"
-  const newLang = currentLang === "en" ? "ua" : "en"
-  $(`[lang="${currentLang}"]`).hide()
-  $(`[lang="${newLang}"]`).show()
-  document.documentElement.setAttribute("lang", newLang)
-}
-
-window.onload = () => {
-  $('[lang="ua"]').hide()
-  const button = document.getElementById("languagebutton")
-  button.addEventListener("click", switchLang)
-}
