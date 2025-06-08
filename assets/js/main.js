@@ -353,8 +353,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 })
+// Updated JavaScript with mobile-specific behavior
 
-// Projects functionality
+// Projects functionality with mobile improvements
 document.addEventListener("DOMContentLoaded", () => {
   const projectsGrid = document.getElementById("projectsGrid")
   const projectCards = document.querySelectorAll(".project-card")
@@ -372,6 +373,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentHoveredProject = null
   let lockedProject = null
   let hoverTimer = null
+
+  // Detect if device is mobile
+  function isMobile() {
+    return (
+      window.innerWidth <= 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    )
+  }
 
   // Get current language
   function getCurrentLanguage() {
@@ -398,6 +407,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (galleryItem.type === "video") {
           galleryItem.poster = item.getAttribute("data-poster")
+        } else if (galleryItem.type === "pdf") {
+          galleryItem.title = item.getAttribute("data-title") || galleryItem.alt
         }
 
         galleryItems.push(galleryItem)
@@ -426,18 +437,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Create gallery item (image or video)
+  // Create gallery item (image, video, or PDF)
   function createGalleryItem(item, index) {
     if (item.type === "video") {
       return `
         <div class="gallery-item video-item" data-index="${index}">
-          <video poster="${item.poster}" preload="metadata" muted>
+          <video poster="${item.poster}" preload="metadata" controls>
             <source src="${item.src}" type="video/mp4">
           </video>
           <div class="video-overlay">
             <button class="video-play-btn">
               <i class="bi bi-play-fill"></i>
             </button>
+          </div>
+        </div>
+      `
+    } else if (item.type === "pdf") {
+      return `
+        <div class="gallery-item pdf-item" data-index="${index}" data-pdf-src="${item.src}" data-pdf-title="${item.title || item.alt}">
+          <div class="pdf-container">
+            <iframe class="pdf-embed" src="${item.src}#toolbar=0&navpanes=0&scrollbar=1&view=FitH" title="${item.alt}"></iframe>
+            <div class="pdf-overlay">
+              <button class="pdf-open-btn">
+                <i class="bi bi-file-earmark-pdf"></i>
+              </button>
+            </div>
+            <div class="pdf-info">${item.title || item.alt}</div>
           </div>
         </div>
       `
@@ -478,10 +503,10 @@ document.addEventListener("DOMContentLoaded", () => {
     `
   }
 
-  // Handle gallery video play
-  function setupGalleryVideoHandlers(container) {
+  // Handle gallery interactions (videos and PDFs)
+  function setupGalleryHandlers(container) {
+    // Video handlers
     const videoItems = container.querySelectorAll(".video-item")
-
     videoItems.forEach((item) => {
       const video = item.querySelector("video")
       const playBtn = item.querySelector(".video-play-btn")
@@ -533,6 +558,41 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.style.opacity = "0"
       })
     })
+
+    // PDF handlers with improved scrolling
+    const pdfItems = container.querySelectorAll(".pdf-item")
+
+    pdfItems.forEach((item) => {
+      const pdfSrc = item.getAttribute("data-pdf-src")
+      const pdfTitle = item.getAttribute("data-pdf-title") || "Document"
+      const openBtn = item.querySelector(".pdf-open-btn")
+      const overlay = item.querySelector(".pdf-overlay")
+
+      if (openBtn && pdfSrc) {
+        openBtn.addEventListener("click", (e) => {
+          e.stopPropagation()
+          // Enhanced PDF URL with better scrolling support
+          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
+          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+        })
+      }
+
+      if (overlay && pdfSrc) {
+        overlay.addEventListener("click", (e) => {
+          e.stopPropagation()
+          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
+          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+        })
+      }
+
+      // Double-click to open PDF
+      if (pdfSrc) {
+        item.addEventListener("dblclick", () => {
+          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
+          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+        })
+      }
+    })
   }
 
   // Update project card display based on data
@@ -569,8 +629,10 @@ document.addEventListener("DOMContentLoaded", () => {
     updateProjectCard(card)
   })
 
-  // Start timer animation
+  // Start timer animation (only on desktop)
   function startTimer(card) {
+    if (isMobile()) return // Skip timer on mobile
+
     const timerProgress = card.querySelector(".timer-progress")
     if (timerProgress) {
       timerProgress.classList.add("active")
@@ -594,23 +656,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
 
-    // Show details in appropriate container
-    if (window.innerWidth >= 992) {
-      const sidebarContent = document.getElementById("sidebarContent")
-      if (sidebarContent) {
-        sidebarContent.innerHTML = createProjectDetail(card)
-        setupGalleryVideoHandlers(sidebarContent)
-        if (projectSidebar) {
-          projectSidebar.style.display = "block"
-        }
-      }
-    } else {
+    // Always use modal on mobile, sidebar on desktop
+    if (isMobile() || window.innerWidth < 992) {
       const modalBody = document.getElementById("modalBody")
       if (modalBody) {
         modalBody.innerHTML = createProjectDetail(card)
-        setupGalleryVideoHandlers(modalBody)
+        setupGalleryHandlers(modalBody)
         if (projectModal) {
           projectModal.style.display = "block"
+        }
+      }
+    } else {
+      const sidebarContent = document.getElementById("sidebarContent")
+      if (sidebarContent) {
+        sidebarContent.innerHTML = createProjectDetail(card)
+        setupGalleryHandlers(sidebarContent)
+        if (projectSidebar) {
+          projectSidebar.style.display = "block"
         }
       }
     }
@@ -641,17 +703,11 @@ document.addEventListener("DOMContentLoaded", () => {
       closeBtn.style.display = "block"
     }
 
-    const circleTimer = card.querySelector(".circle-timer")
-    if (circleTimer) {
-      circleTimer.style.display = "none"
-    }
-
+    // Hide timer on all cards when one is locked
     projectCards.forEach((otherCard) => {
-      if (otherCard !== card) {
-        const otherTimer = otherCard.querySelector(".circle-timer")
-        if (otherTimer) {
-          otherTimer.style.display = "none"
-        }
+      const circleTimer = otherCard.querySelector(".circle-timer")
+      if (circleTimer) {
+        circleTimer.style.display = "none"
       }
     })
   }
@@ -664,12 +720,15 @@ document.addEventListener("DOMContentLoaded", () => {
         closeBtn.style.display = "none"
       }
 
-      projectCards.forEach((card) => {
-        const circleTimer = card.querySelector(".circle-timer")
-        if (circleTimer) {
-          circleTimer.style.display = ""
-        }
-      })
+      // Show timers again (except on mobile)
+      if (!isMobile()) {
+        projectCards.forEach((card) => {
+          const circleTimer = card.querySelector(".circle-timer")
+          if (circleTimer) {
+            circleTimer.style.display = ""
+          }
+        })
+      }
     }
 
     lockedProject = null
@@ -681,71 +740,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Handle project interactions
+  // Handle project interactions with mobile-specific behavior
   projectCards.forEach((card) => {
     const circleTimer = card.querySelector(".circle-timer")
     const closeBtn = card.querySelector(".project-close-btn")
 
-    card.addEventListener("mouseenter", () => {
-      currentHoveredProject = card
+    if (isMobile()) {
+      // Mobile behavior: immediate tap to open
+      card.addEventListener("click", (e) => {
+        e.preventDefault()
 
-      if (lockedProject && lockedProject !== card) {
-        return
-      }
+        if (lockedProject && lockedProject !== card) {
+          unlockProjectDetails()
+        }
 
-      showProjectDetails(card)
+        if (lockedProject === card) {
+          unlockProjectDetails()
+          return
+        }
 
-      if (lockedProject !== card) {
-        startTimer(card)
+        showProjectDetails(card)
+        lockProjectDetails(card)
+      })
+
+      // Disable hover effects on mobile
+      card.style.pointerEvents = "auto"
+    } else {
+      // Desktop behavior: hover with timer
+      card.addEventListener("mouseenter", () => {
+        currentHoveredProject = card
+
+        if (lockedProject && lockedProject !== card) {
+          return
+        }
+
+        showProjectDetails(card)
+
+        if (lockedProject !== card) {
+          startTimer(card)
+
+          if (hoverTimer) {
+            clearTimeout(hoverTimer)
+          }
+
+          hoverTimer = setTimeout(() => {
+            lockProjectDetails(card)
+          }, 3000)
+        }
+      })
+
+      card.addEventListener("mouseleave", () => {
+        if (card === currentHoveredProject) {
+          currentHoveredProject = null
+        }
+
+        stopTimer(card)
 
         if (hoverTimer) {
           clearTimeout(hoverTimer)
+          hoverTimer = null
         }
 
-        hoverTimer = setTimeout(() => {
-          lockProjectDetails(card)
-        }, 3000)
-      }
-    })
+        if (lockedProject !== card) {
+          hideProjectDetails()
+        }
+      })
 
-    card.addEventListener("mouseleave", () => {
-      if (card === currentHoveredProject) {
-        currentHoveredProject = null
-      }
-
-      stopTimer(card)
-
-      if (hoverTimer) {
-        clearTimeout(hoverTimer)
-        hoverTimer = null
-      }
-
-      if (lockedProject !== card) {
-        hideProjectDetails()
-      }
-    })
-
-    card.addEventListener("click", (e) => {
-      if (lockedProject && lockedProject !== card) {
-        unlockProjectDetails()
-      }
-
-      if (lockedProject === card) return
-
-      if (hoverTimer) {
-        clearTimeout(hoverTimer)
-        hoverTimer = null
-      }
-
-      stopTimer(card)
-      showProjectDetails(card)
-      lockProjectDetails(card)
-    })
-
-    if (circleTimer) {
-      circleTimer.addEventListener("click", (e) => {
-        e.stopPropagation()
-
+      card.addEventListener("click", (e) => {
         if (lockedProject && lockedProject !== card) {
           unlockProjectDetails()
         }
@@ -761,6 +822,27 @@ document.addEventListener("DOMContentLoaded", () => {
         showProjectDetails(card)
         lockProjectDetails(card)
       })
+
+      if (circleTimer) {
+        circleTimer.addEventListener("click", (e) => {
+          e.stopPropagation()
+
+          if (lockedProject && lockedProject !== card) {
+            unlockProjectDetails()
+          }
+
+          if (lockedProject === card) return
+
+          if (hoverTimer) {
+            clearTimeout(hoverTimer)
+            hoverTimer = null
+          }
+
+          stopTimer(card)
+          showProjectDetails(card)
+          lockProjectDetails(card)
+        })
+      }
     }
 
     if (closeBtn) {
@@ -791,14 +873,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Handle window resize
   window.addEventListener("resize", () => {
     if (lockedProject) {
-      if (window.innerWidth >= 992) {
+      if (window.innerWidth >= 992 && !isMobile()) {
         if (projectModal) {
           projectModal.style.display = "none"
         }
         const sidebarContent = document.getElementById("sidebarContent")
         if (sidebarContent) {
           sidebarContent.innerHTML = createProjectDetail(lockedProject)
-          setupGalleryVideoHandlers(sidebarContent)
+          setupGalleryHandlers(sidebarContent)
         }
         if (projectSidebar) {
           projectSidebar.style.display = "block"
@@ -810,13 +892,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalBody = document.getElementById("modalBody")
         if (modalBody) {
           modalBody.innerHTML = createProjectDetail(lockedProject)
-          setupGalleryVideoHandlers(modalBody)
+          setupGalleryHandlers(modalBody)
         }
         if (projectModal) {
           projectModal.style.display = "block"
         }
       }
-    } else if (currentHoveredProject) {
+    } else if (currentHoveredProject && !isMobile()) {
       showProjectDetails(currentHoveredProject)
     }
   })
@@ -830,38 +912,111 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 
-// Simple Projects Section JavaScript
+// Enhanced PDF modal with better scrolling support
+
+// PDF Modal Setup with enhanced scrolling
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Projects section script loaded")
-
-  // Basic language toggle functionality
-  function updateLanguageDisplay() {
-    const currentLang = document.documentElement.lang || "en"
-    const elementsToShow = document.querySelectorAll(`[lang="${currentLang}"]`)
-    const elementsToHide = document.querySelectorAll(`[lang]:not([lang="${currentLang}"])`)
-
-    elementsToShow.forEach((el) => (el.style.display = "block"))
-    elementsToHide.forEach((el) => (el.style.display = "none"))
+  // Create PDF modal if it doesn't exist
+  if (!document.getElementById("pdfModal")) {
+    const pdfModal = document.createElement("div")
+    pdfModal.id = "pdfModal"
+    pdfModal.className = "pdf-modal"
+    pdfModal.innerHTML = `
+      <div class="pdf-modal-content">
+        <div class="pdf-modal-header">
+          <h3 class="pdf-modal-title" id="pdfModalTitle">Document</h3>
+          <div class="pdf-modal-controls">
+            <button class="pdf-control-btn" id="pdfFullscreen" title="Fullscreen">
+              <i class="bi bi-fullscreen"></i>
+            </button>
+            <button class="pdf-modal-close" id="pdfModalClose">×</button>
+          </div>
+        </div>
+        <div class="pdf-modal-body">
+          <iframe class="pdf-modal-embed" id="pdfModalEmbed" src="/placeholder.svg" allowfullscreen></iframe>
+        </div>
+      </div>
+    `
+    document.body.appendChild(pdfModal)
   }
 
-  // Initialize language display
-  updateLanguageDisplay()
+  const pdfModal = document.getElementById("pdfModal")
+  const pdfModalClose = document.getElementById("pdfModalClose")
+  const pdfModalEmbed = document.getElementById("pdfModalEmbed")
+  const pdfModalTitle = document.getElementById("pdfModalTitle")
+  const pdfFullscreen = document.getElementById("pdfFullscreen")
 
-  // Simple hover effect for project cards
-  const projectCards = document.querySelectorAll(".project-card")
-  projectCards.forEach((card) => {
-    card.addEventListener("mouseenter", function () {
-      this.style.transform = "translateY(-10px)"
-    })
+  // Function to open PDF in modal with enhanced parameters
+  window.openPdfModal = (pdfSrc, title) => {
+    console.log("Opening PDF:", pdfSrc, title)
 
-    card.addEventListener("mouseleave", function () {
-      this.style.transform = "translateY(0)"
-    })
+    // Enhanced PDF URL parameters for better viewing and scrolling
+    const enhancedSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width&pagemode=thumbs`
 
-    // Simple click handler
-    card.addEventListener("click", function () {
-      console.log("Project card clicked:", this.querySelector("h3").textContent)
-      // You can add more functionality here later
+    pdfModalEmbed.src = enhancedSrc
+    pdfModalTitle.textContent = title || "Document"
+    pdfModal.style.display = "block"
+    document.body.style.overflow = "hidden"
+
+    // Focus on the iframe for better keyboard navigation
+    setTimeout(() => {
+      pdfModalEmbed.focus()
+    }, 500)
+  }
+
+  // Function to close PDF modal
+  function closePdfModal() {
+    pdfModal.style.display = "none"
+    pdfModalEmbed.src = ""
+    document.body.style.overflow = ""
+  }
+
+  // Fullscreen functionality
+  if (pdfFullscreen) {
+    pdfFullscreen.addEventListener("click", () => {
+      if (pdfModalEmbed.requestFullscreen) {
+        pdfModalEmbed.requestFullscreen()
+      } else if (pdfModalEmbed.webkitRequestFullscreen) {
+        pdfModalEmbed.webkitRequestFullscreen()
+      } else if (pdfModalEmbed.msRequestFullscreen) {
+        pdfModalEmbed.msRequestFullscreen()
+      }
     })
+  }
+
+  // Event listeners for PDF modal
+  if (pdfModalClose) {
+    pdfModalClose.addEventListener("click", closePdfModal)
+  }
+
+  if (pdfModal) {
+    pdfModal.addEventListener("click", (e) => {
+      if (e.target === pdfModal) {
+        closePdfModal()
+      }
+    })
+  }
+
+  // Handle escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && pdfModal.style.display === "block") {
+      closePdfModal()
+    }
   })
+
+  // Handle iframe load to ensure proper scrolling
+  if (pdfModalEmbed) {
+    pdfModalEmbed.addEventListener("load", () => {
+      console.log("PDF loaded successfully")
+      // Try to enable scrolling in the iframe
+      try {
+        const iframeDoc = pdfModalEmbed.contentDocument || pdfModalEmbed.contentWindow.document
+        if (iframeDoc) {
+          iframeDoc.body.style.overflow = "auto"
+        }
+      } catch (e) {
+        console.log("Cannot access iframe content (cross-origin)")
+      }
+    })
+  }
 })
