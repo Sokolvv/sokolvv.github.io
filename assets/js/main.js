@@ -432,17 +432,22 @@ document.addEventListener("DOMContentLoaded", () => {
         en: card.getAttribute("data-detail-en"),
         ua: card.getAttribute("data-detail-ua"),
       },
+      webpage: card.getAttribute("webpage") ? card.getAttribute("webpage") : "",
+      webpagemessage: {
+        en: card.getAttribute("webpagemessage-en"),
+        ua: card.getAttribute("webpagemessage-ua"),
+      },
       technologies: card.getAttribute("data-technologies") ? card.getAttribute("data-technologies").split(",") : [],
       gallery: galleryItems,
     }
   }
 
-  // Create gallery item (image, video, or PDF)
+  // Create gallery item (image, video, or PDF) behind metadata choose if controls for media or muted or no controls
   function createGalleryItem(item, index) {
     if (item.type === "video") {
       return `
         <div class="gallery-item video-item" data-index="${index}">
-          <video poster="${item.poster}" preload="metadata" controls>
+          <video poster="${item.poster}" preload="metadata">
             <source src="${item.src}" type="video/mp4">
           </video>
           <div class="video-overlay">
@@ -485,6 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="category-badge">${project.category}</span>
         <h3>${project.title[lang]}</h3>
         <p>${project.detail[lang]}</p>
+        ${
+          project.webpage
+            ? `<p><a href="${project.webpage}" target="_blank" rel="noopener">${project.webpagemessage[lang]}</a></p>`
+            : ""
+        }
+        <br>
         
         <div class="project-gallery">
           <h4>${lang === "en" ? "Project Gallery" : "Галерея проєкту"}</h4>
