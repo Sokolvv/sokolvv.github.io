@@ -627,10 +627,19 @@ document.addEventListener("DOMContentLoaded", () => {
         modalBody.innerHTML = createProjectDetail(card)
         setupGalleryHandlers(modalBody)
 
-        // FIXED: Simplified mobile modal - no positioning changes
+        // ENHANCED: Center modal on the clicked project card
+        const cardRect = card.getBoundingClientRect()
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
+
+        // Calculate the center point of the clicked card relative to the document
+        const cardCenterX = cardRect.left + scrollLeft + cardRect.width / 2
+        const cardCenterY = cardRect.top + scrollTop + cardRect.height / 2
+
+        // Show modal
         projectModal.style.display = "block"
 
-        // Reset any previous styles that might interfere
+        // Reset any previous styles
         projectModal.style.position = ""
         projectModal.style.top = ""
         projectModal.style.left = ""
@@ -640,11 +649,11 @@ document.addEventListener("DOMContentLoaded", () => {
         projectModal.style.overflow = ""
         projectModal.style.backgroundColor = ""
 
-        // Let CSS handle the modal styling completely
+        // Position modal content centered on the clicked project
         const modalContent = projectModal.querySelector(".modal-content")
         if (modalContent) {
-          // Reset modal content styles
-          modalContent.style.position = ""
+          // Reset modal content styles first
+          modalContent.style.position = "absolute"
           modalContent.style.top = ""
           modalContent.style.left = ""
           modalContent.style.transform = ""
@@ -657,11 +666,49 @@ document.addEventListener("DOMContentLoaded", () => {
           modalContent.style.background = ""
           modalContent.style.boxShadow = ""
 
+          // Calculate modal dimensions
+          const modalWidth = Math.min(window.innerWidth * 0.95, 600)
+          const modalHeight = Math.min(window.innerHeight * 0.9, 800)
+
+          // Calculate position to center on the clicked card
+          let modalLeft = cardCenterX - modalWidth / 2
+          let modalTop = cardCenterY - modalHeight / 2
+
+          // Ensure modal stays within viewport bounds
+          const padding = 10
+          modalLeft = Math.max(padding, Math.min(modalLeft, window.innerWidth - modalWidth - padding))
+          modalTop = Math.max(
+            padding + scrollTop,
+            Math.min(modalTop, window.innerHeight + scrollTop - modalHeight - padding),
+          )
+
+          // Apply positioning
+          modalContent.style.position = "absolute"
+          modalContent.style.left = modalLeft + "px"
+          modalContent.style.top = modalTop + "px"
+          modalContent.style.width = modalWidth + "px"
+          modalContent.style.maxHeight = modalHeight + "px"
+          modalContent.style.overflow = "auto"
+          modalContent.style.borderRadius = "10px"
+          modalContent.style.background = "white"
+          modalContent.style.boxShadow = "0 20px 60px rgba(0, 0, 0, 0.3)"
+          modalContent.style.zIndex = "2001"
+
           // Ensure modal content starts at top
           setTimeout(() => {
             modalContent.scrollTop = 0
           }, 50)
         }
+
+        // Style the modal backdrop
+        projectModal.style.position = "fixed"
+        projectModal.style.top = "0"
+        projectModal.style.left = "0"
+        projectModal.style.width = "100vw"
+        projectModal.style.height = "100vh"
+        projectModal.style.zIndex = "2000"
+        projectModal.style.backgroundColor = "rgba(0, 0, 0, 0.8)"
+        projectModal.style.overflow = "auto"
       }
     } else {
       // Desktop sidebar logic remains the same
