@@ -629,20 +629,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // ENHANCED: Center modal on the clicked project card
         const cardRect = card.getBoundingClientRect()
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
 
-        // Calculate the absolute position of the card center in the document
-        const cardCenterX = cardRect.left + scrollLeft + cardRect.width / 2
-        const cardCenterY = cardRect.top + scrollTop + cardRect.height / 2
+        // Calculate the exact center of the clicked card (viewport coordinates)
+        const cardCenterX = cardRect.left + cardRect.width / 2
+        const cardCenterY = cardRect.top + cardRect.height / 2
 
-        console.log("Card position:", {
-          cardRect,
-          scrollTop,
-          scrollLeft,
-          cardCenterX,
-          cardCenterY,
-        })
+        console.log("Card center position:", { cardCenterX, cardCenterY, cardRect })
 
         // Show modal
         projectModal.style.display = "block"
@@ -664,9 +656,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const modalWidth = Math.min(window.innerWidth * 0.95, 600)
           const modalHeight = Math.min(window.innerHeight * 0.9, 800)
 
-          // Calculate position to center on the clicked card (relative to viewport)
-          let modalLeft = cardRect.left + cardRect.width / 2 - modalWidth / 2
-          let modalTop = cardRect.top + cardRect.height / 2 - modalHeight / 2
+          // Calculate position so modal CENTER aligns with card CENTER
+          let modalLeft = cardCenterX - modalWidth / 2
+          let modalTop = cardCenterY - modalHeight / 2
 
           // Ensure modal stays within viewport bounds
           const padding = 10
@@ -678,8 +670,8 @@ document.addEventListener("DOMContentLoaded", () => {
             modalHeight,
             modalLeft,
             modalTop,
-            viewportWidth: window.innerWidth,
-            viewportHeight: window.innerHeight,
+            cardCenterX,
+            cardCenterY,
           })
 
           // Apply positioning (fixed relative to viewport)
