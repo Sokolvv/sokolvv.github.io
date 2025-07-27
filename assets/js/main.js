@@ -284,97 +284,18 @@
   })
 })()
 
-// Copyright modal functionality
 document.addEventListener("DOMContentLoaded", () => {
-  // Set current year
-  const yearSpan = document.getElementById("year")
-  if (yearSpan) {
-    const currentYear = new Date().getFullYear()
-    yearSpan.textContent = currentYear
-  }
-
-  // Copyright modal functionality
-  const copyrightText = document.getElementById("copyright")
-  const copyrightModal = document.getElementById("copyrightModal")
-  const copyrightModalClose = document.getElementById("copyrightModalClose")
-
-  // Show copyright modal on click or hover
-  function showCopyrightModal() {
-    if (copyrightModal) {
-      copyrightModal.style.display = "block"
-      document.body.style.overflow = "hidden" // Prevent background scrolling
-    }
-  }
-
-  // Hide copyright modal
-  function hideCopyrightModal() {
-    if (copyrightModal) {
-      copyrightModal.style.display = "none"
-      document.body.style.overflow = "" // Restore scrolling
-    }
-  }
-
-  // Event listeners
-  if (copyrightText) {
-    // Show on click
-    copyrightText.addEventListener("click", showCopyrightModal)
-
-    // Show on hover (with slight delay)
-    let hoverTimeout
-    copyrightText.addEventListener("mouseenter", () => {
-      hoverTimeout = setTimeout(showCopyrightModal, 500) // 500ms delay
-    })
-
-    copyrightText.addEventListener("mouseleave", () => {
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout)
-      }
-    })
-  }
-
-  // Close modal events
-  if (copyrightModalClose) {
-    copyrightModalClose.addEventListener("click", hideCopyrightModal)
-  }
-
-  // Close modal when clicking outside
-  if (copyrightModal) {
-    copyrightModal.addEventListener("click", (e) => {
-      if (e.target === copyrightModal) {
-        hideCopyrightModal()
-      }
-    })
-  }
-
-  // Close modal with Escape key
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && copyrightModal && copyrightModal.style.display === "block") {
-      hideCopyrightModal()
-    }
-  })
-})
-// Updated JavaScript with mobile-specific behavior
-
-// Projects functionality with mobile improvements
-document.addEventListener("DOMContentLoaded", () => {
-  const projectsGrid = document.getElementById("projectsGrid")
   const projectCards = document.querySelectorAll(".project-card")
-  const projectModal = document.getElementById("projectModal")
   const projectSidebar = document.getElementById("projectSidebar")
+  const projectModal = document.getElementById("projectModal")
   const modalClose = document.getElementById("modalClose")
   const sidebarClose = document.getElementById("sidebarClose")
-
-  // Check if projects elements exist
-  if (!projectsGrid || !projectCards.length) {
-    console.log("Projects elements not found")
-    return
-  }
-
+  const projectDetailContent = document.getElementById("projectDetailContent")
   let currentHoveredProject = null
   let lockedProject = null
   let hoverTimer = null
+  const bootstrap = window.bootstrap // Declare the bootstrap variable
 
-  // Detect if device is mobile
   function isMobile() {
     return (
       window.innerWidth <= 768 ||
@@ -382,13 +303,11 @@ document.addEventListener("DOMContentLoaded", () => {
     )
   }
 
-  // Get current language
   function getCurrentLanguage() {
     const enElements = document.querySelectorAll('[lang="en"]')
     return enElements.length > 0 && window.getComputedStyle(enElements[0]).display !== "none" ? "en" : "ua"
   }
 
-  // Extract project data from HTML attributes
   function getProjectData(card) {
     const lang = getCurrentLanguage()
 
@@ -442,7 +361,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Create gallery item (image, video, or PDF) behind metadata choose if controls for media or muted or no controls
   function createGalleryItem(item, index) {
     if (item.type === "video") {
       return `
@@ -480,7 +398,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Create project detail content
   function createProjectDetail(card) {
     const project = getProjectData(card)
     const lang = getCurrentLanguage()
@@ -514,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
     `
   }
 
-  // Handle gallery interactions (videos and PDFs)
   function setupGalleryHandlers(container) {
     // Video handlers
     const videoItems = container.querySelectorAll(".video-item")
@@ -582,31 +498,33 @@ document.addEventListener("DOMContentLoaded", () => {
       if (openBtn && pdfSrc) {
         openBtn.addEventListener("click", (e) => {
           e.stopPropagation()
-          // Enhanced PDF URL with better scrolling support
-          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
-          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+          // Enhanced PDF URL parameters for better viewing and scrolling
+          const enhancedSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width&pagemode=thumbs`
+
+          window.openPdfModal(enhancedSrc, pdfTitle)
         })
       }
 
       if (overlay && pdfSrc) {
         overlay.addEventListener("click", (e) => {
           e.stopPropagation()
-          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
-          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+          const enhancedSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width&pagemode=thumbs`
+
+          window.openPdfModal(enhancedSrc, pdfTitle)
         })
       }
 
       // Double-click to open PDF
       if (pdfSrc) {
         item.addEventListener("dblclick", () => {
-          const enhancedPdfSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width`
-          window.openPdfModal(enhancedPdfSrc, pdfTitle)
+          const enhancedSrc = `${pdfSrc}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH&zoom=page-width&pagemode=thumbs`
+
+          window.openPdfModal(enhancedSrc, pdfTitle)
         })
       }
     })
   }
 
-  // Update project card display based on data
   function updateProjectCard(card) {
     const project = getProjectData(card)
 
@@ -635,12 +553,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initialize all project cards
   projectCards.forEach((card) => {
     updateProjectCard(card)
   })
 
-  // Start timer animation (only on desktop)
   function startTimer(card) {
     if (isMobile()) return // Skip timer on mobile
 
@@ -650,7 +566,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Stop timer animation
   function stopTimer(card) {
     const timerProgress = card.querySelector(".timer-progress")
     if (timerProgress) {
@@ -658,7 +573,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Show project details
   function showProjectDetails(card) {
     // Dim other cards
     projectCards.forEach((otherCard) => {
@@ -670,12 +584,48 @@ document.addEventListener("DOMContentLoaded", () => {
     // Always use modal on mobile, sidebar on desktop
     if (isMobile() || window.innerWidth < 992) {
       const modalBody = document.getElementById("modalBody")
-      if (modalBody) {
+      if (modalBody && projectModal) {
         modalBody.innerHTML = createProjectDetail(card)
         setupGalleryHandlers(modalBody)
-        if (projectModal) {
-          projectModal.style.display = "block"
+
+        // Enhanced mobile modal positioning
+        projectModal.style.display = "block"
+        projectModal.style.position = "fixed"
+        projectModal.style.top = "0"
+        projectModal.style.left = "0"
+        projectModal.style.width = "100vw"
+        projectModal.style.height = "100vh"
+        projectModal.style.zIndex = "2000"
+        projectModal.style.overflow = "auto"
+
+        // Center the modal content in viewport
+        const modalContent = projectModal.querySelector(".modal-content")
+        if (modalContent) {
+          modalContent.style.position = "absolute"
+          modalContent.style.top = "50%"
+          modalContent.style.left = "50%"
+          modalContent.style.transform = "translate(-50%, -50%)"
+          modalContent.style.width = "95vw"
+          modalContent.style.maxWidth = "600px"
+          modalContent.style.maxHeight = "90vh"
+          modalContent.style.margin = "0"
+          modalContent.style.overflow = "auto"
+          modalContent.style.borderRadius = "10px"
+          modalContent.style.background = "white"
         }
+
+        // Prevent background scrolling
+        document.body.style.overflow = "hidden"
+        document.body.style.position = "fixed"
+        document.body.style.width = "100%"
+        document.body.classList.add("modal-open")
+
+        // Scroll to top of modal content
+        setTimeout(() => {
+          if (modalContent) {
+            modalContent.scrollTop = 0
+          }
+        }, 50)
       }
     } else {
       const sidebarContent = document.getElementById("sidebarContent")
@@ -689,7 +639,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Hide project details
   function hideProjectDetails() {
     if (lockedProject) return
 
@@ -698,6 +647,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (projectModal) {
       projectModal.style.display = "none"
+      // Restore body scrolling
+      document.body.style.overflow = ""
+      document.body.style.position = ""
+      document.body.style.width = ""
+      document.body.classList.remove("modal-open")
     }
 
     projectCards.forEach((card) => {
@@ -705,7 +659,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Lock project details
   function lockProjectDetails(card) {
     lockedProject = card
 
@@ -723,7 +676,6 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Unlock project details
   function unlockProjectDetails() {
     if (lockedProject) {
       const closeBtn = lockedProject.querySelector(".project-close-btn")
@@ -744,6 +696,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     lockedProject = null
 
+    // Hide modal and restore body scrolling
+    if (projectModal) {
+      projectModal.style.display = "none"
+      document.body.style.overflow = ""
+      document.body.style.position = ""
+      document.body.style.width = ""
+      document.body.classList.remove("modal-open")
+    }
+
+    if (projectSidebar) {
+      projectSidebar.style.display = "none"
+    }
+
+    // Remove dimming from other cards
+    projectCards.forEach((card) => {
+      card.classList.remove("dimmed")
+    })
+
     if (!currentHoveredProject) {
       hideProjectDetails()
     } else {
@@ -751,7 +721,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Handle project interactions with mobile-specific behavior
   projectCards.forEach((card) => {
     const circleTimer = card.querySelector(".circle-timer")
     const closeBtn = card.querySelector(".project-close-btn")
@@ -760,6 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Mobile behavior: immediate tap to open
       card.addEventListener("click", (e) => {
         e.preventDefault()
+        e.stopPropagation()
 
         if (lockedProject && lockedProject !== card) {
           unlockProjectDetails()
@@ -818,6 +788,9 @@ document.addEventListener("DOMContentLoaded", () => {
       })
 
       card.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+
         if (lockedProject && lockedProject !== card) {
           unlockProjectDetails()
         }
@@ -859,23 +832,48 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeBtn) {
       closeBtn.addEventListener("click", (e) => {
         e.stopPropagation()
+        e.preventDefault()
         unlockProjectDetails()
       })
     }
   })
 
-  // Close modal/sidebar events
+  // Enhanced close modal/sidebar events
   if (modalClose) {
-    modalClose.addEventListener("click", unlockProjectDetails)
+    modalClose.addEventListener("click", (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      unlockProjectDetails()
+    })
+
+    // Add touch event for mobile
+    modalClose.addEventListener("touchstart", (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      unlockProjectDetails()
+    })
   }
 
   if (sidebarClose) {
-    sidebarClose.addEventListener("click", unlockProjectDetails)
+    sidebarClose.addEventListener("click", (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      unlockProjectDetails()
+    })
   }
 
   if (projectModal) {
     projectModal.addEventListener("click", (e) => {
       if (e.target === projectModal) {
+        e.preventDefault()
+        unlockProjectDetails()
+      }
+    })
+
+    // Add touch event for mobile background tap
+    projectModal.addEventListener("touchstart", (e) => {
+      if (e.target === projectModal) {
+        e.preventDefault()
         unlockProjectDetails()
       }
     })
@@ -887,6 +885,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (window.innerWidth >= 992 && !isMobile()) {
         if (projectModal) {
           projectModal.style.display = "none"
+          document.body.style.overflow = ""
+          document.body.style.position = ""
+          document.body.style.width = ""
+          document.body.classList.remove("modal-open")
         }
         const sidebarContent = document.getElementById("sidebarContent")
         if (sidebarContent) {
@@ -906,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
           setupGalleryHandlers(modalBody)
         }
         if (projectModal) {
-          projectModal.style.display = "block"
+          showProjectDetails(lockedProject) // This will handle proper mobile positioning
         }
       }
     } else if (currentHoveredProject && !isMobile()) {
@@ -922,10 +924,6 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 })
 
-
-// Enhanced PDF modal with better scrolling support
-
-// PDF Modal Setup with enhanced scrolling
 document.addEventListener("DOMContentLoaded", () => {
   // Create PDF modal if it doesn't exist
   if (!document.getElementById("pdfModal")) {
@@ -1030,4 +1028,74 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
   }
+})
+
+// Copyright modal functionality
+document.addEventListener("DOMContentLoaded", () => {
+  // Set current year
+  const yearSpan = document.getElementById("year")
+  if (yearSpan) {
+    const currentYear = new Date().getFullYear()
+    yearSpan.textContent = currentYear
+  }
+
+  // Copyright modal functionality
+  const copyrightText = document.getElementById("copyright")
+  const copyrightModal = document.getElementById("copyrightModal")
+  const copyrightModalClose = document.getElementById("copyrightModalClose")
+
+  // Show copyright modal on click or hover
+  function showCopyrightModal() {
+    if (copyrightModal) {
+      copyrightModal.style.display = "block"
+      document.body.style.overflow = "hidden" // Prevent background scrolling
+    }
+  }
+
+  // Hide copyright modal
+  function hideCopyrightModal() {
+    if (copyrightModal) {
+      copyrightModal.style.display = "none"
+      document.body.style.overflow = "" // Restore scrolling
+    }
+  }
+
+  // Event listeners
+  if (copyrightText) {
+    // Show on click
+    copyrightText.addEventListener("click", showCopyrightModal)
+
+    // Show on hover (with slight delay)
+    let hoverTimeout
+    copyrightText.addEventListener("mouseenter", () => {
+      hoverTimeout = setTimeout(showCopyrightModal, 500) // 500ms delay
+    })
+
+    copyrightText.addEventListener("mouseleave", () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout)
+      }
+    })
+  }
+
+  // Close modal events
+  if (copyrightModalClose) {
+    copyrightModalClose.addEventListener("click", hideCopyrightModal)
+  }
+
+  // Close modal when clicking outside
+  if (copyrightModal) {
+    copyrightModal.addEventListener("click", (e) => {
+      if (e.target === copyrightModal) {
+        hideCopyrightModal()
+      }
+    })
+  }
+
+  // Close modal with Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && copyrightModal && copyrightModal.style.display === "block") {
+      hideCopyrightModal()
+    }
+  })
 })
