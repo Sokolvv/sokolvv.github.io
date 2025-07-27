@@ -627,40 +627,41 @@ document.addEventListener("DOMContentLoaded", () => {
         modalBody.innerHTML = createProjectDetail(card)
         setupGalleryHandlers(modalBody)
 
-        // Show modal with simple display
+        // FIXED: Simplified mobile modal - no positioning changes
         projectModal.style.display = "block"
-        projectModal.style.position = "fixed"
-        projectModal.style.top = "0"
-        projectModal.style.left = "0"
-        projectModal.style.width = "100vw"
-        projectModal.style.height = "100vh"
-        projectModal.style.zIndex = "2000"
-        projectModal.style.overflow = "auto"
-        projectModal.style.backgroundColor = "rgba(0, 0, 0, 0.8)"
 
-        // Center the modal content in viewport
+        // Reset any previous styles that might interfere
+        projectModal.style.position = ""
+        projectModal.style.top = ""
+        projectModal.style.left = ""
+        projectModal.style.width = ""
+        projectModal.style.height = ""
+        projectModal.style.zIndex = ""
+        projectModal.style.overflow = ""
+        projectModal.style.backgroundColor = ""
+
+        // Let CSS handle the modal styling completely
         const modalContent = projectModal.querySelector(".modal-content")
         if (modalContent) {
-          modalContent.style.position = "absolute"
-          modalContent.style.top = "50%"
-          modalContent.style.left = "50%"
-          modalContent.style.transform = "translate(-50%, -50%)"
-          modalContent.style.width = "95vw"
-          modalContent.style.maxWidth = "600px"
-          modalContent.style.maxHeight = "90vh"
-          modalContent.style.margin = "0"
-          modalContent.style.overflow = "auto"
-          modalContent.style.borderRadius = "10px"
-          modalContent.style.background = "white"
-          modalContent.style.boxShadow = "0 20px 60px rgba(0, 0, 0, 0.3)"
-        }
+          // Reset modal content styles
+          modalContent.style.position = ""
+          modalContent.style.top = ""
+          modalContent.style.left = ""
+          modalContent.style.transform = ""
+          modalContent.style.width = ""
+          modalContent.style.maxWidth = ""
+          modalContent.style.maxHeight = ""
+          modalContent.style.margin = ""
+          modalContent.style.overflow = ""
+          modalContent.style.borderRadius = ""
+          modalContent.style.background = ""
+          modalContent.style.boxShadow = ""
 
-        // Ensure modal content starts at top
-        setTimeout(() => {
-          if (modalContent) {
+          // Ensure modal content starts at top
+          setTimeout(() => {
             modalContent.scrollTop = 0
-          }
-        }, 50)
+          }, 50)
+        }
       }
     } else {
       // Desktop sidebar logic remains the same
@@ -797,12 +798,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeBtn = card.querySelector(".project-close-btn")
 
     if (isMobile()) {
-      // Mobile behavior: immediate tap to open
+      // FIXED: Simplified mobile behavior
       card.addEventListener("click", (e) => {
         e.preventDefault()
         e.stopPropagation()
 
-        console.log("Mobile project card clicked") // Debug log
+        console.log("Mobile project card clicked")
 
         if (lockedProject && lockedProject !== card) {
           unlockProjectDetails()
@@ -817,8 +818,14 @@ document.addEventListener("DOMContentLoaded", () => {
         lockProjectDetails(card)
       })
 
-      // Disable hover effects on mobile
-      card.style.pointerEvents = "auto"
+      // Ensure proper touch handling
+      card.addEventListener("touchstart", (e) => {
+        // Don't prevent default to allow normal touch behavior
+      })
+
+      card.addEventListener("touchend", (e) => {
+        // Don't prevent default to allow normal touch behavior
+      })
     } else {
       // Enhanced desktop behavior with debouncing
       card.addEventListener("mouseenter", (e) => {
@@ -963,8 +970,13 @@ document.addEventListener("DOMContentLoaded", () => {
       unlockProjectDetails()
     })
 
-    // Add touch event for mobile
+    // FIXED: Better mobile touch handling
     modalClose.addEventListener("touchstart", (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+    })
+
+    modalClose.addEventListener("touchend", (e) => {
       e.preventDefault()
       e.stopPropagation()
       unlockProjectDetails()
@@ -987,8 +999,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
 
-    // Add touch event for mobile background tap
+    // FIXED: Better mobile background tap handling
     projectModal.addEventListener("touchstart", (e) => {
+      if (e.target === projectModal) {
+        e.preventDefault()
+      }
+    })
+
+    projectModal.addEventListener("touchend", (e) => {
       if (e.target === projectModal) {
         e.preventDefault()
         unlockProjectDetails()
