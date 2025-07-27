@@ -294,6 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentHoveredProject = null
   let lockedProject = null
   let hoverTimer = null
+  let showTimer = null
+  let hideTimer = null
   const bootstrap = window.bootstrap // Declare the bootstrap variable
 
   function isMobile() {
@@ -573,7 +575,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Calculate optimal sidebar position to avoid overlap
+  function calculateSidebarPosition(card) {
+    if (!projectSidebar) return { right: "20px", left: "auto" }
+
+    const cardRect = card.getBoundingClientRect()
+    const sidebarWidth = 450
+    const windowWidth = window.innerWidth
+    const buffer = 20
+
+    // Check if sidebar would overlap with card when positioned on the right
+    const rightPosition = windowWidth - cardRect.right
+    const wouldOverlapRight = rightPosition < sidebarWidth + buffer
+
+    // If it would overlap on the right, try positioning on the left
+    if (wouldOverlapRight) {
+      const leftPosition = cardRect.left
+      const wouldOverlapLeft = leftPosition < sidebarWidth + buffer
+
+      if (!wouldOverlapLeft) {
+        // Position on the left
+        return { left: `${buffer}px`, right: "auto" }
+      } else {
+        // If both sides would overlap, position with minimal overlap on the right
+        return { right: `${Math.max(buffer, rightPosition - 50)}px`, left: "auto" }
+      }
+    }
+
+    // Default right positioning
+    return { right: "20px", left: "auto" }
+  }
+
   function showProjectDetails(card) {
+    // Clear any pending hide timer
+    if (hideTimer) {
+      clearTimeout(hideTimer)
+      hideTimer = null
+    }
+
     // Dim other cards
     projectCards.forEach((otherCard) => {
       if (otherCard !== card) {
@@ -588,7 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modalBody.innerHTML = createProjectDetail(card)
         setupGalleryHandlers(modalBody)
 
-        // Enhanced mobile modal positioning
+        // Show modal with simple display
         projectModal.style.display = "block"
         projectModal.style.position = "fixed"
         projectModal.style.top = "0"
@@ -597,6 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
         projectModal.style.height = "100vh"
         projectModal.style.zIndex = "2000"
         projectModal.style.overflow = "auto"
+        projectModal.style.backgroundColor = "rgba(0, 0, 0, 0.8)"
 
         // Center the modal content in viewport
         const modalContent = projectModal.querySelector(".modal-content")
@@ -612,15 +652,10 @@ document.addEventListener("DOMContentLoaded", () => {
           modalContent.style.overflow = "auto"
           modalContent.style.borderRadius = "10px"
           modalContent.style.background = "white"
+          modalContent.style.boxShadow = "0 20px 60px rgba(0, 0, 0, 0.3)"
         }
 
-        // Prevent background scrolling
-        document.body.style.overflow = "hidden"
-        document.body.style.position = "fixed"
-        document.body.style.width = "100%"
-        document.body.classList.add("modal-open")
-
-        // Scroll to top of modal content
+        // Ensure modal content starts at top
         setTimeout(() => {
           if (modalContent) {
             modalContent.scrollTop = 0
@@ -628,13 +663,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 50)
       }
     } else {
+      // Desktop sidebar logic remains the same
       const sidebarContent = document.getElementById("sidebarContent")
-      if (sidebarContent) {
+      if (sidebarContent && projectSidebar) {
         sidebarContent.innerHTML = createProjectDetail(card)
         setupGalleryHandlers(sidebarContent)
-        if (projectSidebar) {
-          projectSidebar.style.display = "block"
+
+        const position = calculateSidebarPosition(card)
+        projectSidebar.style.right = position.right
+        projectSidebar.style.left = position.left
+
+        if (showTimer) {
+          clearTimeout(showTimer)
         }
+
+        showTimer = setTimeout(() => {
+          if (projectSidebar && currentHoveredProject === card) {
+            projectSidebar.style.display = "block"
+            projectSidebar.style.opacity = "0"
+            projectSidebar.style.transition = "opacity 0.2s ease"
+
+            setTimeout(() => {
+              if (projectSidebar && currentHoveredProject === card) {
+                projectSidebar.style.opacity = "1"
+              }
+            }, 10)
+          }
+        }, 100)
       }
     }
   }
@@ -642,38 +697,54 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideProjectDetails() {
     if (lockedProject) return
 
-    if (projectSidebar) {
-      projectSidebar.style.display = "none"
-    }
-    if (projectModal) {
-      projectModal.style.display = "none"
-      // Restore body scrolling
-      document.body.style.overflow = ""
-      document.body.style.position = ""
-      document.body.style.width = ""
-      document.body.classList.remove("modal-open")
+    // Clear any pending show timer
+    if (showTimer) {
+      clearTimeout(showTimer)
+      showTimer = null
     }
 
-    projectCards.forEach((card) => {
-      card.classList.remove("dimmed")
-    })
+    // Add a delay before hiding to prevent flickering
+    if (hideTimer) {
+      clearTimeout(hideTimer)
+    }
+
+    hideTimer = setTimeout(() => {
+      if (!currentHoveredProject && !lockedProject) {
+        if (projectSidebar) {
+          projectSidebar.style.opacity = "0"
+          setTimeout(() => {
+            if (!currentHoveredProject && !lockedProject) {
+              projectSidebar.style.display = "none"
+            }
+          }, 200)
+        }
+        if (projectModal) {
+          projectModal.style.display = "none"
+        }
+
+        projectCards.forEach((card) => {
+          card.classList.remove("dimmed")
+        })
+      }
+    }, 150)
   }
 
   function lockProjectDetails(card) {
     lockedProject = card
-
     const closeBtn = card.querySelector(".project-close-btn")
     if (closeBtn) {
       closeBtn.style.display = "block"
     }
 
-    // Hide timer on all cards when one is locked
-    projectCards.forEach((otherCard) => {
-      const circleTimer = otherCard.querySelector(".circle-timer")
-      if (circleTimer) {
-        circleTimer.style.display = "none"
-      }
-    })
+    // Hide timers on lock (except on mobile)
+    if (!isMobile()) {
+      projectCards.forEach((otherCard) => {
+        const circleTimer = otherCard.querySelector(".circle-timer")
+        if (circleTimer && otherCard !== card) {
+          circleTimer.style.display = "none"
+        }
+      })
+    }
   }
 
   function unlockProjectDetails() {
@@ -696,17 +767,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     lockedProject = null
 
-    // Hide modal and restore body scrolling
     if (projectModal) {
       projectModal.style.display = "none"
-      document.body.style.overflow = ""
-      document.body.style.position = ""
-      document.body.style.width = ""
-      document.body.classList.remove("modal-open")
     }
 
     if (projectSidebar) {
-      projectSidebar.style.display = "none"
+      projectSidebar.style.opacity = "0"
+      setTimeout(() => {
+        if (!lockedProject) {
+          projectSidebar.style.display = "none"
+        }
+      }, 200)
     }
 
     // Remove dimming from other cards
@@ -731,6 +802,8 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault()
         e.stopPropagation()
 
+        console.log("Mobile project card clicked") // Debug log
+
         if (lockedProject && lockedProject !== card) {
           unlockProjectDetails()
         }
@@ -747,12 +820,18 @@ document.addEventListener("DOMContentLoaded", () => {
       // Disable hover effects on mobile
       card.style.pointerEvents = "auto"
     } else {
-      // Desktop behavior: hover with timer
-      card.addEventListener("mouseenter", () => {
+      // Enhanced desktop behavior with debouncing
+      card.addEventListener("mouseenter", (e) => {
         currentHoveredProject = card
 
         if (lockedProject && lockedProject !== card) {
           return
+        }
+
+        // Clear any existing timers
+        if (hideTimer) {
+          clearTimeout(hideTimer)
+          hideTimer = null
         }
 
         showProjectDetails(card)
@@ -765,12 +844,20 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           hoverTimer = setTimeout(() => {
-            lockProjectDetails(card)
+            if (currentHoveredProject === card) {
+              lockProjectDetails(card)
+            }
           }, 3000)
         }
       })
 
-      card.addEventListener("mouseleave", () => {
+      card.addEventListener("mouseleave", (e) => {
+        // Check if mouse is moving to sidebar
+        const relatedTarget = e.relatedTarget
+        if (relatedTarget && projectSidebar && projectSidebar.contains(relatedTarget)) {
+          return // Don't hide if moving to sidebar
+        }
+
         if (card === currentHoveredProject) {
           currentHoveredProject = null
         }
@@ -838,6 +925,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   })
 
+  // Add hover handlers for sidebar to prevent flickering
+  if (projectSidebar) {
+    projectSidebar.addEventListener("mouseenter", () => {
+      // Clear hide timer when entering sidebar
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+        hideTimer = null
+      }
+    })
+
+    projectSidebar.addEventListener("mouseleave", (e) => {
+      // Check if mouse is moving back to a project card
+      const relatedTarget = e.relatedTarget
+      let isMovingToProjectCard = false
+
+      if (relatedTarget) {
+        projectCards.forEach((card) => {
+          if (card.contains(relatedTarget)) {
+            isMovingToProjectCard = true
+          }
+        })
+      }
+
+      if (!isMovingToProjectCard && !lockedProject) {
+        currentHoveredProject = null
+        hideProjectDetails()
+      }
+    })
+  }
+
   // Enhanced close modal/sidebar events
   if (modalClose) {
     modalClose.addEventListener("click", (e) => {
@@ -885,10 +1002,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (window.innerWidth >= 992 && !isMobile()) {
         if (projectModal) {
           projectModal.style.display = "none"
-          document.body.style.overflow = ""
-          document.body.style.position = ""
-          document.body.style.width = ""
-          document.body.classList.remove("modal-open")
         }
         const sidebarContent = document.getElementById("sidebarContent")
         if (sidebarContent) {
@@ -896,7 +1009,12 @@ document.addEventListener("DOMContentLoaded", () => {
           setupGalleryHandlers(sidebarContent)
         }
         if (projectSidebar) {
+          // Recalculate position on resize
+          const position = calculateSidebarPosition(lockedProject)
+          projectSidebar.style.right = position.right
+          projectSidebar.style.left = position.left
           projectSidebar.style.display = "block"
+          projectSidebar.style.opacity = "1"
         }
       } else {
         if (projectSidebar) {
@@ -965,7 +1083,6 @@ document.addEventListener("DOMContentLoaded", () => {
     pdfModalEmbed.src = enhancedSrc
     pdfModalTitle.textContent = title || "Document"
     pdfModal.style.display = "block"
-    document.body.style.overflow = "hidden"
 
     // Focus on the iframe for better keyboard navigation
     setTimeout(() => {
@@ -977,7 +1094,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function closePdfModal() {
     pdfModal.style.display = "none"
     pdfModalEmbed.src = ""
-    document.body.style.overflow = ""
   }
 
   // Fullscreen functionality
@@ -1048,7 +1164,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function showCopyrightModal() {
     if (copyrightModal) {
       copyrightModal.style.display = "block"
-      document.body.style.overflow = "hidden" // Prevent background scrolling
     }
   }
 
@@ -1056,7 +1171,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideCopyrightModal() {
     if (copyrightModal) {
       copyrightModal.style.display = "none"
-      document.body.style.overflow = "" // Restore scrolling
     }
   }
 
